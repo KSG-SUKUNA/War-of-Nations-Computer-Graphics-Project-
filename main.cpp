@@ -17,6 +17,7 @@ static int   g_scene  = 1;
 static float g_time   = 0.0f;
 static float g_dt     = 0.0f;
 static int   g_lastMs = 0;
+static float g_sceneTimer = 0.0f;
 
 static float armEndXApprox(float sx, float sc2);
 static float rf(float lo,float hi)
@@ -1787,7 +1788,7 @@ static void updateScene1(float dt)
         jets[i].x+=jets[i].vx*dt*35;
         if(jets[i].x>180) jets[i].x=-180;
     }
-
+    if (g_time > 3.0f)
     for(int i=0; i<MAX_JETS; i++)
     {
         if(ri(0,30)<2)
@@ -2743,8 +2744,7 @@ static void drawScene2()
     {
         float extAlpha=(s2_phase<=2)?1.0f:(1.0f-s2_icuAlpha);
 
-        // Smoke particles (drawn BEFORE ambulance so they appear BEHIND it)
-        pDraw();
+
 
         // Draw ambulance on top of smoke
         drawAmbulance(s2_ambX,-55);
@@ -3014,7 +3014,7 @@ static void drawScene2()
             glColor4f(0.95f,0.92f,0.88f,ma);
             drawText(-125,-5,"SORRY, WE COULDN'T SAVE OUR LEADER",0.38f);
             glColor4f(0.80f,0.22f,0.22f,ma*0.95f);
-            drawText(-80,-17,"-- DR. A.K.M TAMIM RAHMAN --",0.30f);
+            drawText(-80,-17,"-- DR. Md Mainul Islam --",0.30f);
             float bl=0.5f+0.5f*sinf(g_time*4);
             glColor4f(1,0,0,bl*ma);
             drawCircle(-128,-4,3.5f,12,1);
@@ -5802,11 +5802,32 @@ static void display()
 }
 static void idle()
 {
-    int now=glutGet(GLUT_ELAPSED_TIME);
-    g_dt=(now-g_lastMs)/1000.0f;
-    if(g_dt>0.05f)g_dt=0.05f;
-    g_lastMs=now;
-    g_time+=g_dt;
+    int now = glutGet(GLUT_ELAPSED_TIME);
+    g_dt = (now - g_lastMs) / 1000.0f;
+
+    if(g_dt > 0.05f)
+    {
+        g_dt = 0.05f;
+    }
+
+    g_lastMs = now;
+    g_time += g_dt;
+
+    g_sceneTimer += g_dt;
+
+    if(g_sceneTimer >= 30.0f)
+    {
+        g_scene++;
+
+        if(g_scene > 5)
+        {
+            g_scene = 1;
+        }
+
+        sceneInit(g_scene);
+        g_sceneTimer = 0.0f;
+    }
+
     switch(g_scene)
     {
     case 1:
@@ -5825,21 +5846,34 @@ static void idle()
         updateScene5(g_dt);
         break;
     }
+
     glutPostRedisplay();
 }
-static void keyboard(unsigned char key,int,int)
+static void keyboard(unsigned char key, int x, int y)
 {
-    if(key==' ')
+    if(key == ' ')
     {
         g_scene++;
-        if(g_scene>5)g_scene=1;
+
+        if(g_scene > 5)
+        {
+            g_scene = 1;
+        }
+
         sceneInit(g_scene);
+        g_sceneTimer = 0.0f;
     }
-    if(key=='r'||key=='R')
+
+    if(key == 'r' || key == 'R')
     {
         sceneInit(g_scene);
+        g_sceneTimer = 0.0f;
     }
-    if(key==27)exit(0);
+
+    if(key == 27)
+    {
+        exit(0);
+    }
 }
 static void reshape(int w,int h)
 {
